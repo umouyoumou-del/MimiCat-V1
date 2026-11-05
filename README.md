@@ -86,7 +86,7 @@ The Q4_K_M weights are split into `<2 GiB` parts. Reconstruct them with:
 ```bash
 cat mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf.part-* \
   > mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf
-sha256sum -c SHA256SUMS
+sha256sum -c q4_k_m.sha256
 ```
 
 Release assets also include:
@@ -105,7 +105,7 @@ cat mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf.part-* \
   > mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf
 
 # verify
-sha256sum -c SHA256SUMS
+sha256sum -c q4_k_m.sha256
 
 # install the inference framework
 mkdir DeepInfer-SM86-0.3.0
