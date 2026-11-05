@@ -1,5 +1,7 @@
 # MimiCat V1 — 120B total / 4B active
 
+[中文说明](README.zh-CN.md)
+
 MimiCat V1 is a genuine **120B-total, 4B-active** sparse Mixture-of-Experts model.
 
 | Property | Value |
