@@ -1,5 +1,7 @@
 # MimiCat V1 — 120B 总参数 / 4B 激活
 
+[English](README.md)
+
 MimiCat V1 是**货真价实的 120B 总参数、4B 激活参数**稀疏 MoE 模型。
 
 | 项目 | 数值 |
