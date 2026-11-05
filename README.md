@@ -2,13 +2,12 @@
 
 Tied weights are not used for the 120B release.
 
-- Architecture: DeepSeek-V2-style MoE
 - Total parameters: 120,093,863,424 (120.094B)
 - Active parameters: 4,035,374,592 (4.035B)
 - Routed experts: 528
 - Top-k: 12
 - Post-training: code + Japanese roleplay + Chinese roleplay LoRA, 300 optimizer steps
-- Base: DeepSeek-Coder-V2-Lite-Instruct (16B)
+- Base: a third-party 16B code-oriented MoE base (16B)
 - Post-training: code + Japanese roleplay + Chinese roleplay LoRA, 300 steps
 
 Large weights are published as GitHub Release assets split into <2 GiB parts because GitHub rejects single files over 2 GiB.
