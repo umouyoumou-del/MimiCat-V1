@@ -92,7 +92,7 @@ Q4_K_M 权重按 `<2 GiB` 分片发布。重建：
 ```bash
 cat mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf.part-* \
   > mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf
-sha256sum -c SHA256SUMS
+sha256sum -c q4_k_m.sha256
 ```
 
 Release 同时包含：
@@ -111,7 +111,7 @@ cat mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf.part-* \
   > mimicat-v1-120b-zh-rp-v2-q4_k_m.gguf
 
 # 校验
-sha256sum -c SHA256SUMS
+sha256sum -c q4_k_m.sha256
 
 # 安装推理框架
 mkdir DeepInfer-SM86-0.3.0
