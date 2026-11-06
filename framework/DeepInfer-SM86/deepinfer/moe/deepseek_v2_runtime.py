@@ -1445,8 +1445,8 @@ class DeepSeekV2LiteGGUFRuntime:
         self.native_paged_attention_enabled = True
         self._closed = False
 
-        if self.device.type != "cuda":
-            raise ValueError("DeepSeek-V2-Lite MoE runtime currently requires CUDA")
+        if self.device.type not in ("cuda", "musa"):
+            raise ValueError("DeepSeek-V2-Lite MoE runtime requires a CUDA/MUSA accelerator")
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is unavailable")
         torch.set_num_threads(self.cpu_threads)
@@ -1779,7 +1779,7 @@ class DeepSeekV2LiteGGUFRuntime:
             array = np.ascontiguousarray(array)
         tensor = torch.from_numpy(array).to(dtype=dtype)
         del array
-        if device.type == "cuda":
+        if device.type in ("cuda", "musa"):
             tensor = tensor.to(device)
         return tensor
 
@@ -1953,6 +1953,35 @@ class DeepSeekV2LiteGGUFRuntime:
             mlp.forward = _cpu_mlp_forward.__get__(mlp, type(mlp))
         self.dense_mlp_devices[layer_idx] = device_name
 
+    def _load_kv_b(self, attn: nn.Module, layer_idx: int) -> None:
+        """Load the MLA kv_b projection, accepting both GGUF layouts.
+
+        Older DeepSeek-V2 GGUFs store one ``attn_kv_b`` matrix.  llama.cpp's
+        MLA layout stores ``attn_k_b`` [heads, rank, nope] and ``attn_v_b``
+        [heads, v_head, rank] instead.  The native runtime needs the original
+        [heads * (nope + v_head), rank] matrix, so rebuild it from the split
+        tensors when the combined name is absent.
+        """
+        whole = f"blk.{layer_idx}.attn_kv_b.weight"
+        if whole in self.index.tensors:
+            self._load_linear(attn.kv_b_proj, whole)
+            return
+        k_name = f"blk.{layer_idx}.attn_k_b.weight"
+        v_name = f"blk.{layer_idx}.attn_v_b.weight"
+        k = self.index.read_tensor(k_name)
+        v = self.index.read_tensor(v_name)
+        if k.ndim != 3 or v.ndim != 3:
+            raise ValueError(f"unexpected MLA split shapes for layer {layer_idx}: {k.shape}, {v.shape}")
+        heads, rank, nope = k.shape
+        if v.shape[0] != heads or v.shape[2] != rank:
+            raise ValueError(f"MLA split mismatch for layer {layer_idx}: {k.shape}, {v.shape}")
+        merged = np.concatenate((k.transpose(0, 2, 1), v), axis=1)
+        merged = merged.reshape(heads * (nope + v.shape[1]), rank)
+        weight = torch.from_numpy(np.ascontiguousarray(merged)).to(
+            device=self.device, dtype=torch.float16
+        )
+        _set_parameter(attn.kv_b_proj, "weight", weight)
+
     def _load_weights(self, shared_experts_device: str, lm_head_device: str) -> None:
         model = self.model
         # Embedding lookup is tiny at decode time and is deliberately kept on
@@ -1981,7 +2010,7 @@ class DeepSeekV2LiteGGUFRuntime:
             self._load_linear(
                 attn.kv_a_proj_with_mqa, f"blk.{layer_idx}.attn_kv_a_mqa.weight"
             )
-            self._load_linear(attn.kv_b_proj, f"blk.{layer_idx}.attn_kv_b.weight")
+            self._load_kv_b(attn, layer_idx)
             self._load_linear(attn.o_proj, f"blk.{layer_idx}.attn_output.weight")
             self._load_norm(
                 attn.kv_a_layernorm, f"blk.{layer_idx}.attn_kv_a_norm.weight"
@@ -3105,13 +3134,13 @@ class DeepSeekV2LiteGGUFRuntime:
     def _logits(self, hidden_states: torch.Tensor) -> torch.Tensor:
         last = hidden_states[:, -1:, :]
         weight = self.model.lm_head.weight
-        if weight.device.type == "cuda":
+        if weight.device.type in ("cuda", "musa"):
             return F.linear(last.to(dtype=weight.dtype), weight).float()
         return F.linear(last.float().cpu(), weight.float())
 
     def _all_logits(self, hidden_states: torch.Tensor) -> torch.Tensor:
         weight = self.model.lm_head.weight
-        if weight.device.type == "cuda":
+        if weight.device.type in ("cuda", "musa"):
             return F.linear(hidden_states.to(dtype=weight.dtype), weight).float()
         return F.linear(hidden_states.float().cpu(), weight.float()).to(
             hidden_states.device
