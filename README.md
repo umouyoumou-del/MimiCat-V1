@@ -62,20 +62,18 @@ coding tasks. The trained expert slots are independent and measurably different.
 
 ## 10M context with DeepInfer-SM86
 
-DeepInfer-SM86 is included as a separate inference framework in the release
-assets (`DeepInfer-SM86-0.3.0.tar.gz`). It provides hierarchical FTS5 retrieval
-and short on-demand evidence windows for 10M-token documents.
+DeepInfer-SM86 is included as source code in
+[`framework/DeepInfer-SM86`](framework/DeepInfer-SM86) and as the
+`DeepInfer-SM86-0.3.0.tar.gz` release asset. It provides hierarchical FTS5
+retrieval and short on-demand evidence windows for 10M-token documents.
 
-Verified on 10,000,000 tokens:
+Verified entirely inside DeepInfer-SM86 on 10,000,000 tokens:
 
 - **Simple retrieval:** 100 / 100 needle hits and 100 / 100 exact answers.
 - **Complex global queries:** 137 / 137 marker count, 5 / 5 summary themes,
   and all 100 metric records aggregated correctly.
-- **End-to-end:** DeepInfer retrieval + Qwen3.5-4B answered the 10M needle
-  question correctly with a 2,107-token evidence window.
 
-The 10M retrieval layer is model-agnostic and works with the same DeepInfer
-pipeline used by the 120B deployment.
+The 10M retrieval and global-query path uses DeepInfer-SM86 only.
 
 ## Release
 

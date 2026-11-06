@@ -70,18 +70,18 @@ RP 分支提升中文角色扮演；coding 分支 8 题全过。528 个槽位不
 DeepInfer-SM86-0.3.0.tar.gz
 ```
 
-DeepInfer-SM86 提供 10M token 文档的分层 FTS5 检索、evidence window
-和短 KV 按需加载。
+DeepInfer-SM86 源码已放入
+[`framework/DeepInfer-SM86`](framework/DeepInfer-SM86)，同时提供
+`DeepInfer-SM86-0.3.0.tar.gz` release 资产。它提供 10M token 文档的分层
+FTS5 检索、evidence window 和短 KV 按需加载。
 
-10,000,000 token 实测：
+10,000,000 token 全部在 DeepInfer-SM86 内实测：
 
 - **简单任务**：100 / 100 needle 命中，100 / 100 精确回答；
 - **复杂全局任务**：137 / 137 marker 计数，5 / 5 主题摘要，
-  100 条 metric 记录按类别聚合全部正确；
-- **端到端**：DeepInfer 检索 + Qwen3.5-4B 正确回答 10M needle 问题，
-  证据窗口 2,107 tokens。
+  100 条 metric 记录按类别聚合全部正确。
 
-10M 检索层与模型权重解耦，120B 部署继续使用同一套 DeepInfer 管线。
+10M 检索与全局查询路径只使用 DeepInfer-SM86。
 
 ## 发布文件
 
